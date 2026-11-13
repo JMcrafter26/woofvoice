@@ -1,6 +1,15 @@
-# Woof LLM Streaming
+# WoofVoice
 
 Streams (or outputs) speech from a local Underdog Woof TTS model in response to OpenAI-compatible, Ollama, or Anthropic requests.
+
+Features include:
+
+- Streaming audio output, with optional chunked output for external players
+- Multiple providers and models, including OpenAI, Ollama, and Anthropic
+- Multiple voices (powered by Underdog Woof), including Mira and Juno
+- Routing audio to virtual devices like VB-CABLE
+- In-process notifications when each audio chunk is ready
+- Both command-line usage and library usage
 
 ## Setup
 
@@ -43,7 +52,7 @@ pip install hf
 Set the provider settings in `.env`, then run:
 
 ```bash
-woof-llm-streaming "Tell me a short joke." --output response.wav
+woofvoice "Tell me a short joke." --output response.wav
 ```
 
 (or `python main.py "Tell me a short joke." --output response.wav` if you don't have the script installed)
@@ -51,8 +60,8 @@ woof-llm-streaming "Tell me a short joke." --output response.wav
 Select a provider explicitly when needed:
 
 ```bash
-woof-llm-streaming --provider ollama --model llama3.2 "Tell me a short joke."
-woof-llm-streaming --provider anthropic --model claude-sonnet-4-5 "Tell me a short joke."
+woofvoice --provider ollama --model llama3.2 "Tell me a short joke."
+woofvoice --provider anthropic --model claude-sonnet-4-5 "Tell me a short joke."
 ```
 
 Use `--voice mira` to select the Mira voice, or `--no-play` to save audio without playing it.
@@ -60,8 +69,8 @@ Use `--voice mira` to select the Mira voice, or `--no-play` to save audio withou
 To route live audio to VB-CABLE or another virtual device, list available outputs:
 
 ```bash
-woof-llm-streaming --list-audio-devices
-woof-llm-streaming --audio-device "VB-CABLE" "Tell me a short joke."
+woofvoice --list-audio-devices
+woofvoice --audio-device "VB-CABLE" "Tell me a short joke."
 ```
 
 You can also set `AUDIO_DEVICE` in `.env`. Use the device name or numeric index shown by
@@ -70,7 +79,7 @@ You can also set `AUDIO_DEVICE` in `.env`. Use the device name or numeric index 
 To expose each spoken segment as soon as it is generated, write chunks to a directory:
 
 ```bash
-woof-llm-streaming --chunk-dir ./audio-chunks "Tell me a short joke."
+woofvoice --chunk-dir ./audio-chunks "Tell me a short joke."
 ```
 
 Each file is a complete WAV named with a unique run ID, sequence number, and text hash,
@@ -83,7 +92,7 @@ For in-process notifications, pass `on_chunk`. It receives an `AudioChunkEvent`
 after the file is ready, including `run_id`, `index`, `text`, and `path`:
 
 ```python
-from woof_tts import AudioChunkEvent
+from woofvoice import AudioChunkEvent
 
 def new_chunk(event: AudioChunkEvent) -> None:
     print(f"Play section {event.index}: {event.text} ({event.path})")
@@ -95,7 +104,7 @@ stream_and_speak(tokens, tts, "response.wav", chunk_dir="audio-chunks", on_chunk
 
 ```python
 from underdog_woof import Woof
-from woof_tts import OllamaChatBackend, stream_and_speak
+from woofvoice import OllamaChatBackend, stream_and_speak
 
 backend = OllamaChatBackend("http://localhost:11434", "llama3.2")
 stream_and_speak(

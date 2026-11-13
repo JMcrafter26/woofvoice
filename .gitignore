@@ -227,3 +227,7 @@ __marimo__/
 underdog-woof/
 chunks/
 *.wav
+*.zip
+
+# macOS
+.DS_Store

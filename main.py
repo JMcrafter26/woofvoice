@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / "underdog-woof"))
 
 from underdog_woof import Woof
-from woof_tts import (
+from woofvoice import (
     AnthropicChatBackend,
     ChatBackend,
     OllamaChatBackend,
