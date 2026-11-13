@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import queue
 import re
 import threading
 import unicodedata
+import uuid
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Protocol
@@ -79,20 +81,26 @@ def stream_and_speak(
     audio_device: int | str | None = None,
     max_chars: int = 240,
     on_text: Callable[[str], None] | None = None,
+    chunk_dir: str | Path | None = None,
 ) -> str:
     """Convert a token stream to pipelined audio and return the full response text.
 
     `audio_device` may be a sounddevice index or name, such as a VB-CABLE output.
+    When `chunk_dir` is set, each generated segment is saved there immediately as
+    an atomically-created WAV file for external playback.
     """
     text_queue: queue.Queue[str | None] = queue.Queue(maxsize=8)
     audio_queue: queue.Queue[np.ndarray | None] = queue.Queue(maxsize=8)
     stop_event = threading.Event()
     generated: list[np.ndarray] = []
     errors: list[BaseException] = []
+    chunk_output_dir = Path(chunk_dir) if chunk_dir else None
+    run_id = uuid.uuid4().hex[:12]
 
     def generate_audio() -> None:
         try:
             first_chunk = True
+            chunk_index = 0
             while not stop_event.is_set():
                 try:
                     chunk = text_queue.get(timeout=0.1)
@@ -103,6 +111,14 @@ def stream_and_speak(
                 audio = tts(chunk, seed=seed if first_chunk else None)
                 first_chunk = False
                 generated.append(audio)
+                if chunk_output_dir:
+                    chunk_output_dir.mkdir(parents=True, exist_ok=True)
+                    chunk_index += 1
+                    text_hash = hashlib.sha256(chunk.encode()).hexdigest()[:12]
+                    chunk_path = chunk_output_dir / f"{run_id}-{chunk_index:06d}-{text_hash}.wav"
+                    temporary_path = chunk_path.with_suffix(".tmp")
+                    tts.save(temporary_path, audio)
+                    temporary_path.replace(chunk_path)
                 if play:
                     while not stop_event.is_set():
                         try:

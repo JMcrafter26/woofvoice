@@ -67,6 +67,18 @@ woof-llm-streaming --audio-device "VB-CABLE" "Tell me a short joke."
 You can also set `AUDIO_DEVICE` in `.env`. Use the device name or numeric index shown by
 `--list-audio-devices`; the WAV file is still saved normally.
 
+To expose each spoken segment as soon as it is generated, write chunks to a directory:
+
+```bash
+woof-llm-streaming --chunk-dir ./audio-chunks "Tell me a short joke."
+```
+
+Each file is a complete WAV named with a unique run ID, sequence number, and text hash,
+for example `a1b2c3d4e5f6-000001-9f2a1c4d8e77.wav`. An external player can watch this
+directory and play files in sequence. Files are written atomically, so only complete
+audio files appear with the `.wav` extension. The same option is available through
+`AUDIO_CHUNK_DIR` in `.env` and as `chunk_dir` in `stream_and_speak()`.
+
 ## Use as a library
 
 ```python
@@ -79,5 +91,6 @@ stream_and_speak(
     Woof(voice="juno"),
     "response.wav",
     audio_device="VB-CABLE",
+    chunk_dir="audio-chunks",
 )
 ```

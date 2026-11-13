@@ -84,6 +84,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--audio-device", help="Output device name or index, for example VB-CABLE")
     parser.add_argument("--list-audio-devices", action="store_true", help="List available audio output devices and exit")
+    parser.add_argument("--chunk-dir", help="Write each spoken chunk as a WAV file in this directory")
     parser.add_argument("--no-play", action="store_true", help="Save the WAV without playing it")
     args = parser.parse_args()
 
@@ -96,6 +97,7 @@ def main() -> None:
     backend = create_backend(args, config)
     tts = Woof(voice=args.voice)
     audio_device = parse_audio_device(args.audio_device or config.get("AUDIO_DEVICE"))
+    chunk_dir = args.chunk_dir or config.get("AUDIO_CHUNK_DIR")
 
     def handle_response(messages: list[dict[str, str]], output_path: str) -> str:
         response = stream_and_speak(
@@ -106,6 +108,7 @@ def main() -> None:
             play=not args.no_play,
             audio_device=audio_device,
             on_text=lambda chunk: print(chunk, flush=True),
+            chunk_dir=chunk_dir,
         )
         if response:
             print(f"\nSaved audio to {output_path}")
