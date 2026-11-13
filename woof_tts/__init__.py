@@ -6,10 +6,11 @@ from .providers import (
     OllamaChatBackend,
     OpenAIChatBackend,
 )
-from .streaming import clean_for_speech, speakable_chunks, stream_and_speak
+from .streaming import AudioChunkEvent, clean_for_speech, speakable_chunks, stream_and_speak
 
 __all__ = [
     "AnthropicChatBackend",
+    "AudioChunkEvent",
     "ChatBackend",
     "OllamaChatBackend",
     "OpenAIChatBackend",

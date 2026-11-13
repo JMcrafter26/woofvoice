@@ -79,6 +79,18 @@ directory and play files in sequence. Files are written atomically, so only comp
 audio files appear with the `.wav` extension. The same option is available through
 `AUDIO_CHUNK_DIR` in `.env` and as `chunk_dir` in `stream_and_speak()`.
 
+For in-process notifications, pass `on_chunk`. It receives an `AudioChunkEvent`
+after the file is ready, including `run_id`, `index`, `text`, and `path`:
+
+```python
+from woof_tts import AudioChunkEvent
+
+def new_chunk(event: AudioChunkEvent) -> None:
+    print(f"Play section {event.index}: {event.text} ({event.path})")
+
+stream_and_speak(tokens, tts, "response.wav", chunk_dir="audio-chunks", on_chunk=new_chunk)
+```
+
 ## Use as a library
 
 ```python

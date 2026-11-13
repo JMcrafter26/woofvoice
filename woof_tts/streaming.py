@@ -9,6 +9,7 @@ import threading
 import unicodedata
 import uuid
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
@@ -24,6 +25,16 @@ class TextToSpeech(Protocol):
     @staticmethod
     def save(path: str | Path, wav: np.ndarray) -> None:
         ...
+
+
+@dataclass(frozen=True)
+class AudioChunkEvent:
+    """Metadata for a newly-created external audio chunk."""
+
+    run_id: str
+    index: int
+    text: str
+    path: Path
 
 
 def speakable_chunks(tokens: Iterator[str], max_chars: int = 240) -> Iterator[str]:
@@ -82,12 +93,15 @@ def stream_and_speak(
     max_chars: int = 240,
     on_text: Callable[[str], None] | None = None,
     chunk_dir: str | Path | None = None,
+    on_chunk: Callable[[AudioChunkEvent], None] | None = None,
 ) -> str:
     """Convert a token stream to pipelined audio and return the full response text.
 
     `audio_device` may be a sounddevice index or name, such as a VB-CABLE output.
     When `chunk_dir` is set, each generated segment is saved there immediately as
     an atomically-created WAV file for external playback.
+    `on_chunk` is called after each chunk file is atomically renamed and
+    receives the spoken section text and its sequence number.
     """
     text_queue: queue.Queue[str | None] = queue.Queue(maxsize=8)
     audio_queue: queue.Queue[np.ndarray | None] = queue.Queue(maxsize=8)
@@ -119,6 +133,8 @@ def stream_and_speak(
                     temporary_path = chunk_path.with_suffix(".tmp")
                     tts.save(temporary_path, audio)
                     temporary_path.replace(chunk_path)
+                    if on_chunk:
+                        on_chunk(AudioChunkEvent(run_id, chunk_index, chunk, chunk_path))
                 if play:
                     while not stop_event.is_set():
                         try:
