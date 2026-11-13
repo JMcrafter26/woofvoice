@@ -106,3 +106,15 @@ stream_and_speak(
     chunk_dir="audio-chunks",
 )
 ```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+NOTE: This license does not cover the Underdog Woof model and/or their content, which is subject to its own license. Please refer to the model's license for usage terms.
+
+Woof is free for non-commercial use, with credit. Commercial use needs a license. The full terms are the
+[Underdog Non-Commercial License 1.0](https://huggingface.co/ConwayResearch/Underdog-Woof/blob/main/LICENSE).
+
+The audio decoder is adapted from Kyutai's Mimi, and the training data includes LibriTTS-R and Emilia-YODAS, all CC-BY
+4.0. The attributions are in [NOTICE](https://huggingface.co/ConwayResearch/Underdog-Woof/blob/main/NOTICE).

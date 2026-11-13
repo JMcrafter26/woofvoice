@@ -225,3 +225,5 @@ __marimo__/
 
 # underdoog exclude repo
 underdog-woof/
+chunks/
+*.wav
