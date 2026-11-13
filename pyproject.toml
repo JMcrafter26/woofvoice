@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "woof-llm-streaming"
 version = "0.1.0"
-description = "Stream OpenAI-compatible responses through local Underdog Woof TTS"
+description = "Stream chat responses through local Underdog Woof TTS"
 requires-python = ">=3.11"
 dependencies = [
     "huggingface-hub>=0.30",
@@ -18,3 +18,4 @@ woof-llm-streaming = "main:main"
 
 [tool.setuptools]
 py-modules = ["main"]
+packages = ["woof_tts"]
