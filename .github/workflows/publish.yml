@@ -1,0 +1,65 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pyproject.toml
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: pypi-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish woofvoice
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect version change
+        id: version
+        shell: bash
+        run: |
+          current_version="$(sed -nE 's/^version = "([^"]+)"/\1/p' pyproject.toml | head -n 1)"
+          previous_version=""
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            previous_version="$(git show HEAD^:pyproject.toml 2>/dev/null \
+              | sed -nE 's/^version = "([^"]+)"/\1/p' | head -n 1)"
+          fi
+
+          if [[ -z "$current_version" ]]; then
+            echo "Could not read the project version from pyproject.toml" >&2
+            exit 1
+          fi
+
+          echo "current=$current_version"
+          echo "previous=${previous_version:-<none>}"
+          if [[ "$current_version" != "$previous_version" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up uv
+        if: steps.version.outputs.changed == 'true'
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build distributions
+        if: steps.version.outputs.changed == 'true'
+        run: uv build
+
+      - name: Publish with PyPI trusted publishing
+        if: steps.version.outputs.changed == 'true'
+        run: uv publish --trusted-publishing always
